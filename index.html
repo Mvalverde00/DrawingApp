@@ -1,0 +1,49 @@
+<!Doctype html>
+<html>
+    <head>
+        <title>Simple Drawing App</title>
+        <style>
+            select#soflow {
+                -webkit-appearance: button;
+                -webkit-border-radius: 2px;
+                -webkit-box-shadow: 0px 1px 3px rgba(0, 0, 0, 0.1);
+                -webkit-padding-end: 20px;
+                -webkit-padding-start: 2px;
+                -webkit-user-select: none;
+                background-image: url(http://i62.tinypic.com/15xvbd5.png), -webkit-linear-gradient(#FAFAFA, #F4F4F4 40%, #E5E5E5);
+                background-position: 97% center;
+                background-repeat: no-repeat;
+                border: 1px solid #AAA;
+                color: #555;
+                font-size: inherit;
+                margin: 20px;
+                overflow: hidden;
+                padding: 5px 10px;
+                text-overflow: ellipsis;
+                white-space: nowrap;
+                width: 300px;
+            }
+        </style>
+
+    </head>
+
+    <body>
+
+        <select id='soflow' onchange='set_tool(this)'>
+            <option value=0>Rectangle</option>
+            <option value=1>Line</option>
+            <option value=2>Freedraw</option>
+            <option value=3>Circle</option>
+        </select>
+
+        <label for='stroke_color'>Stroke Color:</label>
+        <input id ='stroke_color' class='jscolor' value='000000' onchange='set_stroke_color(this)'>
+
+        <label for='fill_color'>Fill Color:</label>
+        <input id='fill_color' class='jscolor' value='ffffff' onchange='set_fill_color(this)'>
+
+        <canvas id='canvas' width='1000' height='1000' style='width: 100%; height: 80%; border: 1px solid black'></canvas>
+        <script src='drawing.js'></script>
+        <script src='jscolor.min.js'></script>
+    </body>
+</html>
