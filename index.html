@@ -34,6 +34,10 @@
             <option value=1>Line</option>
             <option value=2>Freedraw</option>
             <option value=3>Circle</option>
+            <option value=4>Triangle</option>
+            <option value=5>Eraser</option>
+            <option value=6>Select (incomplete)</option>
+            <option value=7>Fill Bucket (incomplete)</option>
         </select>
 
         <label for='stroke_color'>Stroke Color:</label>
@@ -42,8 +46,14 @@
         <label for='fill_color'>Fill Color:</label>
         <input id='fill_color' class='jscolor' value='ffffff' onchange='set_fill_color(this)'>
 
+        <label for='fill_enable'>Fill Enabled:</label>
+        <input id='fill_enable' type='checkbox' onchange='set_fill(this)'>
+
+        <button onclick='undo()'>Undo</button>
+        <button onclick='redo()'>Redo</button>
+
         <canvas id='canvas' width='1000' height='1000' style='width: 100%; height: 80%; border: 1px solid black'></canvas>
         <script src='drawing.js'></script>
         <script src='jscolor.min.js'></script>
     </body>
-</html>
+</html> 
