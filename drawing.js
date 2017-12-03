@@ -60,9 +60,18 @@ function Shape(x, y, width, height, stroke_color, fill_color, fill) {
     this.fill_color = fill_color;
     this.fill = fill;
 
-    this.draw = function() {
-    }
-    this.line_collision = function(mx, my, lx, ly, lw, lh) {
+    this.draw = function() {}
+
+    this.collision = function() {}
+
+    this.translate = function(sx, sy, ex, ey) {
+        // sourceX, endX, deltaX
+
+        var dx = ex - sx;
+        var dy = ey - sy;
+
+        x += dx;
+        y += dy;
 
     }
 
@@ -185,16 +194,16 @@ function Circle(x, y, width, height, stroke_color, fill_color, fill) {
 function Triangle(x, y, width, height, stroke_color, fill_color, fill) {
     Shape.call(this);
 
-    this.second_point = [ x + width, y + height];
-    this.third_point = [ this.second_point[0], y ];
+    this.p2 = [ x + width, y + height];
+    this.p3 = [ this.p2[0], y ];
 
     this.draw = function(ctx) {
 
         ctx.beginPath();
         ctx.moveTo(x, y);
-        ctx.lineTo( this.second_point[0], this.second_point[1] );
-        ctx.lineTo( this.third_point[0], this.third_point[1] );
-        ctx.lineTo( x, y);
+        ctx.lineTo( this.p2[0], this.p2[1] );
+        ctx.lineTo( this.p3[0], this.p3[1] );
+        ctx.lineTo(x, y);
 
         if (fill) {
             ctx.fillStyle = fill_color;
@@ -209,8 +218,8 @@ function Triangle(x, y, width, height, stroke_color, fill_color, fill) {
         if (fill) {
             // improve readability
             var p0 = [x,y];
-            var p1 = this.second_point;
-            var p2 = this.third_point;
+            var p1 = this.p2;
+            var p2 = this.p3;
 
             var area = .5 * (-p1[1]*p2[0] + p0[1]*(-p1[0] + p2[0]) + p0[0]*(p1[1] - p2[1]) + p1[0]*p2[1]);
             var s = 1/(2*area)*(p0[1]*p2[0] - p0[0]*p2[1] + (p2[1]-p0[1])*mx + (p0[0] - p2[0])*my );
@@ -219,10 +228,32 @@ function Triangle(x, y, width, height, stroke_color, fill_color, fill) {
             return s > 0 && t > 0 && (1-s-t) > 0;
         }
         else {
-            return true;
+            var l1 = this.collision_line_helper(mx, my, x, y, this.p2[0], this.p2[1]);
+            var l2 = this.collision_line_helper(mx, my, this.p2[0], this.p2[1], this.p3[0], this.p3[1]);
+            var l3 = this.collision_line_helper(mx, my, this.p3[0], this.p3[1], x, y);
+            
+            return l1 || l2 || l3;
         }
-
     }
+    this.collision_line_helper = function(mx, my, x1, y1, x2, y2) {
+        //y = m*x + b;  b = y - m*x  Not to be confused with mx, aka mouse-x 
+        var m = (y2 - y1)/(x2 - x1);
+        var b = y1 - m*x1;
+
+        var ERROR_MARGIN = 4;
+
+        var on_line;
+        if (m == Infinity) on_line = Math.abs(mx - x1) < ERROR_MARGIN; //A straight line will be undefined, and thus must be handled specially
+        else on_line = Math.abs(m*mx + b - my) < ERROR_MARGIN;
+
+        //the or statements account for the fact that, in this implementation, a line from (50,50) to (100,100) is different than a line from (100,100) to (50,50) in terms of x/y and width/height
+        var in_x_range = ( ((mx + ERROR_MARGIN) >= x1) && ((mx - ERROR_MARGIN) <= x2) ) || ( ((mx + ERROR_MARGIN) <= x1) && ((mx - ERROR_MARGIN) >= x2) );
+        var in_y_range = ( ((my + ERROR_MARGIN) >= y1) && ((my - ERROR_MARGIN) <= y2) ) || ( ((my + ERROR_MARGIN) <= y1) && ((my - ERROR_MARGIN) >= y2) );
+        console.log(on_line);
+        console.log(in_x_range);
+        return on_line && in_x_range && in_y_range;
+    }
+
 }
 
 /*
@@ -343,7 +374,8 @@ var c = new function() {
                     c.current_shape.draw(c.ctx);
                     break;
                 case 6:
-                    // Collision code
+                    c.current_shape.translate(mouse.startX, mouse.startY, mouse.x);
+                    c.current_shape.draw(c.ctx);
                     break;
                 default:
                     break;
