@@ -62,6 +62,9 @@ function Shape(x, y, width, height, stroke_color, fill_color, fill) {
 
     this.draw = function() {
     }
+    this.line_collision = function(mx, my, lx, ly, lw, lh) {
+
+    }
 
 }
 
@@ -80,18 +83,22 @@ function Rectangle(x, y, width, height, stroke_color, fill_color, fill) {
     }
 
     this.collision = function(mx, my) {
-        if (!fill) {
+        if (fill) {
             return mx >= x && //If click is inside filled shape
             mx <= (x + width) &&
             my >= y &&
             my <= (y + height);
         }
         else {
-            console.log(mx + ' vs ' + x);
-            console.log(my + ' vs ' + y);
-            console.log('------------');
-            return mx >= x  && mx <= x + width && (Math.abs(my - y) < 1 || Math.abs(my - (y + height)) < 1) || //If click is on edge of hollow shape
-            my >= y && my <= y + height && (Math.abs(mx - x) < 1 || Math.abs(mx -(x+width) < 1));
+            //console.log(mx + ' vs ' + x + ' to ' + (x + width) );
+            //console.log(my + ' vs ' + y + ' to ' + (y + height) );
+            var ERROR_MARGIN = 3;
+            var valid_top_bottom = (mx >= x && mx <= (x + width)) && (Math.abs(my - y) < ERROR_MARGIN || Math.abs(my - (y + height)) < ERROR_MARGIN);
+            var valid_left_right = (my >= y && my <= (y + height)) && (Math.abs(mx - x) < ERROR_MARGIN || Math.abs(mx - (x+width)) < ERROR_MARGIN);
+
+            //console.log('valid_top_bottom: ' + valid_top_bottom);
+            //console.log('valid_left_right: ' + valid_left_right);
+            return valid_top_bottom || valid_left_right;
         }
     }
 }
@@ -105,6 +112,21 @@ function Line(x, y, width, height, stroke_color, fill_color=null, fill=false) {
         ctx.moveTo(x, y);
         ctx.lineTo(x + width, y + height);
         ctx.stroke();
+    }
+
+    this.collision = function(mx, my) {
+        //y = m*x + b;  b = y - m*x  Not to be confused with mx, aka mouse-x 
+        var m = ((y + height) - y)/((x + width) - x);
+        var b = y - m*x;
+
+        ERROR_MARGIN = 3;
+        var on_line = Math.abs(m*mx + b - my) < ERROR_MARGIN; // Check if point falls on line
+        //the or statesments account for the fact that, in this implementation, a line from (50,50) to (100,100) is different than a line from (100,100) to (50,50) in terms of x/y and width/height
+        var in_x_range = ( ((mx + ERROR_MARGIN) >= x) && ((mx - ERROR_MARGIN) <= (x + width)) ) || ( ((mx + ERROR_MARGIN) <= x) && ((mx - ERROR_MARGIN) >= (x + width)) );
+        var in_y_range = ( ((my + ERROR_MARGIN) >= y) && ((my - ERROR_MARGIN) <= (y + height)) ) || ( ((my + ERROR_MARGIN) <= y) && ((my - ERROR_MARGIN) >= (y + height)) );
+
+        return on_line && in_x_range && in_y_range;
+
     }
 }
 
@@ -147,6 +169,17 @@ function Circle(x, y, width, height, stroke_color, fill_color, fill) {
         ctx.stroke();
 
     }
+    
+    this.collision = function(mx, my) {
+        if (fill) return (mx - x)*(mx - x) + (my - y)*(my - y) <= this.radius*this.radius;
+        else {
+            // A ring (annulus) can be created by starting with an outer circle and removing an inner circle
+            var ERROR_MARGIN = 5;
+            var in_outer_circle = (mx - x)*(mx - x) + (my - y)*(my - y) <= (this.radius+ERROR_MARGIN)*(this.radius+ERROR_MARGIN);
+            var in_inner_circle = (mx - x)*(mx - x) + (my - y)*(my - y) <= (this.radius-ERROR_MARGIN)*(this.radius-ERROR_MARGIN);
+            return in_outer_circle && !in_inner_circle;
+        }
+    }
 }
 
 function Triangle(x, y, width, height, stroke_color, fill_color, fill) {
@@ -170,6 +203,25 @@ function Triangle(x, y, width, height, stroke_color, fill_color, fill) {
 
         ctx.strokeStyle = stroke_color;
         ctx.stroke();
+    }
+    this.collision = function(mx, my) {
+        //Filled collisions calculated using Barycentric coordinate system
+        if (fill) {
+            // improve readability
+            var p0 = [x,y];
+            var p1 = this.second_point;
+            var p2 = this.third_point;
+
+            var area = .5 * (-p1[1]*p2[0] + p0[1]*(-p1[0] + p2[0]) + p0[0]*(p1[1] - p2[1]) + p1[0]*p2[1]);
+            var s = 1/(2*area)*(p0[1]*p2[0] - p0[0]*p2[1] + (p2[1]-p0[1])*mx + (p0[0] - p2[0])*my );
+            var t = 1/(2*area)*(p0[0]*p1[1] - p0[1]*p1[0] + (p0[1]-p1[1])*mx + (p1[0] - p0[0])*my );
+
+            return s > 0 && t > 0 && (1-s-t) > 0;
+        }
+        else {
+            return true;
+        }
+
     }
 }
 
@@ -244,10 +296,9 @@ var c = new function() {
             for (let shape of c.shapes) {
                 if (shape.hasOwnProperty('collision')) {
                     if (shape.collision(mouse.x, mouse.y)) {
-                        console.log('collision');
-                    }
-                    else {
-                        console.log('no collision');
+                        c.current_shape = shape;
+                        console.log(shape);
+                        break;
                     }
                 }
             }
