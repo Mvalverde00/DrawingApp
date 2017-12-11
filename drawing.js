@@ -14,7 +14,7 @@ function setMousePos(canvas, evt) {
       mouse.x = (evt.clientX - rect.left) * scaleX,
       mouse.y = (evt.clientY - rect.top) * scaleY
 }
-
+ 
 function Settings(stroke_color, fill_color, fill, tool, thickness) {
     this.stroke_color = stroke_color;
     this.fill_color = fill_color;
@@ -70,33 +70,37 @@ function Shape(x, y, width, height, stroke_color, fill_color, fill) {
         var dx = ex - sx;
         var dy = ey - sy;
 
-        x += dx;
-        y += dy;
+        this.x += dx;
+        this.y += dy;
+
+        if (this.hasOwnProperty('p2')) {
+            this.p2 = [ this.x + this.width, this.y + this.height];
+            this.p3 = [ this.p2[0], this.y ];
+        }
 
     }
 
 }
 
 function Rectangle(x, y, width, height, stroke_color, fill_color, fill) {
-    Shape.call(this);
-
+    Shape.call(this, x, y, width, height, stroke_color, fill_color, fill);
     this.draw = function(ctx) {
 
         if (fill) {
-            ctx.fillStyle = fill_color;
-            ctx.fillRect(x, y, width, height);
+            ctx.fillStyle = this.fill_color;
+            ctx.fillRect(this.x, this.y, this.width, this.height);
         }
-        ctx.strokeStyle = stroke_color;
-        ctx.strokeRect(x, y, width, height);
+        ctx.strokeStyle = this.stroke_color;
+        ctx.strokeRect(this.x, this.y, this.width, this.height);
 
     }
 
     this.collision = function(mx, my) {
         if (fill) {
-            return mx >= x && //If click is inside filled shape
-            mx <= (x + width) &&
-            my >= y &&
-            my <= (y + height);
+            return mx >= this.x && //If click is inside filled shape
+            mx <= (this.x + this.width) &&
+            my >= this.y &&
+            my <= (this.y + this.height);
         }
         else {
             //console.log(mx + ' vs ' + x + ' to ' + (x + width) );
@@ -113,7 +117,7 @@ function Rectangle(x, y, width, height, stroke_color, fill_color, fill) {
 }
 
 function Line(x, y, width, height, stroke_color, fill_color=null, fill=false) {
-    Shape.call(this);
+    Shape.call(this, x, y, width, height, stroke_color, fill_color, fill);
 
     this.draw = function(ctx) {
         ctx.strokeStyle = stroke_color;
@@ -161,56 +165,56 @@ function FreeDraw(x ,y, stroke_color) {
 }
 
 function Circle(x, y, width, height, stroke_color, fill_color, fill) {
-    Shape.call(this);
+    Shape.call(this, x, y, width, height, stroke_color, fill_color, fill);
 
-    this.radius = Math.sqrt( (x - (x+width)) * (x - (x+width)) + (y - (y+height)) * (y - (y+height))  ); //Distance formula = radius
+    this.radius = Math.sqrt( (this.x - (this.x+this.width)) * (this.x - (this.x+this.width)) + (this.y - (this.y+this.height)) * (this.y - (this.y+this.height))  ); //Distance formula = radius
 
     this.draw = function(ctx) {
         
         ctx.beginPath();
-        ctx.arc(x, y, this.radius, 0, 2*Math.PI);
+        ctx.arc(this.x, this.y, this.radius, 0, 2*Math.PI);
         
-        if (fill) {
-            ctx.fillStyle = fill_color;
+        if (this.fill) {
+            ctx.fillStyle = this.fill_color;
             ctx.fill();
         }
-        ctx.strokeStyle = stroke_color;
+        ctx.strokeStyle = this.stroke_color;
         ctx.stroke();
 
     }
     
     this.collision = function(mx, my) {
-        if (fill) return (mx - x)*(mx - x) + (my - y)*(my - y) <= this.radius*this.radius;
+        if (this.fill) return (mx - this.x)*(mx - this.x) + (my - this.y)*(my - this.y) <= this.radius*this.radius;
         else {
             // A ring (annulus) can be created by starting with an outer circle and removing an inner circle
             var ERROR_MARGIN = 5;
-            var in_outer_circle = (mx - x)*(mx - x) + (my - y)*(my - y) <= (this.radius+ERROR_MARGIN)*(this.radius+ERROR_MARGIN);
-            var in_inner_circle = (mx - x)*(mx - x) + (my - y)*(my - y) <= (this.radius-ERROR_MARGIN)*(this.radius-ERROR_MARGIN);
+            var in_outer_circle = (mx - this.x)*(mx - this.x) + (my - this.y)*(my - this.y) <= (this.radius+ERROR_MARGIN)*(this.radius+ERROR_MARGIN);
+            var in_inner_circle = (mx - this.x)*(mx - this.x) + (my - this.y)*(my - this.y) <= (this.radius-ERROR_MARGIN)*(this.radius-ERROR_MARGIN);
             return in_outer_circle && !in_inner_circle;
         }
     }
 }
 
 function Triangle(x, y, width, height, stroke_color, fill_color, fill) {
-    Shape.call(this);
+    Shape.call(this, x, y, width, height, stroke_color, fill_color, fill);
 
-    this.p2 = [ x + width, y + height];
-    this.p3 = [ this.p2[0], y ];
+    this.p2 = [ this.x + this.width, this.y + this.height];
+    this.p3 = [ this.p2[0], this.y ];
 
     this.draw = function(ctx) {
 
         ctx.beginPath();
-        ctx.moveTo(x, y);
+        ctx.moveTo(this.x, this.y);
         ctx.lineTo( this.p2[0], this.p2[1] );
         ctx.lineTo( this.p3[0], this.p3[1] );
-        ctx.lineTo(x, y);
+        ctx.lineTo(this.x, this.y);
 
         if (fill) {
-            ctx.fillStyle = fill_color;
+            ctx.fillStyle = this.fill_color;
             ctx.fill();
         }
 
-        ctx.strokeStyle = stroke_color;
+        ctx.strokeStyle = this.stroke_color;
         ctx.stroke();
     }
     this.collision = function(mx, my) {
@@ -295,19 +299,90 @@ function Eraser(x, y) {
     };
 }
 
-function Selector(x, y) {
-    this.x = x;
-    this.y = y;
+function Command(execute, undo) {
+    this.execute = execute;
+    this.undo = undo;
+}
 
+function AddShape(shape) {
+    this.execute = function(array) {
+        array.push(shape);
+    }
+    this.undo = function(array) {
+        array.pop();
+    }
+}
+
+function Move(shape, sx, sy, dx, dy) {
+    this.execute = function(){
+        shape.translate(sx, sy, dx, dy);
+    }
+    this.undo = function(array) {
+        shape.translate(dx, dy, sx, sy);
+    }
+}
+
+function ShapeManager(ctx, cw, ch) {
+    this.ctx = ctx;
+    this.cw = cw;
+    this.ch = ch;
+
+    this.shapes = []; //main array used for rendering
+    this.command_history = []; //allow undo
+    this.undo_history = []; //allow redo
+
+    this.current_shape = null;
+    this.current_transformation = null;
+
+    this.execute_command = function(command) {
+        command.execute(this.shapes);
+        this.command_history.push(command);
+
+        this.undo_history = []; //Undo history is cleared when a command is executed.
+    };
+
+    this.undo_command = function() {
+        command = this.command_history.pop();
+        command.undo(this.shapes);
+        this.undo_history.push(command);
+
+        this.render();
+    };
+    
+    this.redo_command = function() {
+        command = this.undo_history.pop();
+        command.execute(this.shapes);
+        this.command_history.push(command);
+
+        this.render();
+    }
+
+    this.render = function() {
+        this.ctx.clearRect(0, 0, this.cw, this.ch);
+
+        for(let shape of this.shapes) {
+            if (shape != this.current_shape){
+                shape.draw(this.ctx);
+            }
+        }
+    }
+
+    this.get_collision = function(x, y) {
+        for (var i = this.shapes.length - 1; i >= 0; i--) {
+            if (this.shapes[i].hasOwnProperty('collision')) {
+                if (this.shapes[i].collision(x, y)) return this.shapes[i];
+            }
+        }
+        return null;
+    }
 }
 
 var c = new function() {
     this.canvas = document.getElementById('canvas');
     this.ctx = canvas.getContext('2d');
     this.user = new User("testuser");
-    this.current_shape = null;
-    this.shapes = [];
-    this.undone_shapes = [];
+
+    this.shape_manager = new ShapeManager(this.ctx, this.canvas.width, this.canvas.height);
 
     this.temp_freedraw;
 
@@ -318,104 +393,94 @@ var c = new function() {
         
         if (c.user.settings.tool == 2) {
             c.temp_freedraw = new FreeDraw(mouse.startX, mouse.startY, c.user.settings.stroke_color);
-            c.current_shape = c.temp_freedraw;
+            c.shape_manager.current_shape = c.temp_freedraw;
         }
         if (c.user.settings.tool == 5) {
-            c.current_shape = new Eraser();
+            c.shape_manager.current_shape = new Eraser();
         }
         if (c.user.settings.tool == 6) {
-            for (let shape of c.shapes) {
-                if (shape.hasOwnProperty('collision')) {
-                    if (shape.collision(mouse.x, mouse.y)) {
-                        c.current_shape = shape;
-                        console.log(shape);
-                        break;
-                    }
-                }
-            }
+            c.shape_manager.current_shape = c.shape_manager.get_collision(mouse.x, mouse.y);
+            console.log(c.shape_manager.current_shape);
         }
 
     } , false);
-    canvas.addEventListener('onmouseout', function(e) {
-        mouse.isDown = false;
+
+    canvas.addEventListener('mouseout', function(e) {
+        console.log('mouse out');
+        c.onMouseUp();
     }, false);
     canvas.addEventListener('mouseup', function(e) {
-        mouse.isDown = false;
+        c.onMouseUp();
     } , false);
 
     canvas.addEventListener('mousemove', function(e) {
-        c.render();
+        c.shape_manager.render();
         setMousePos(canvas, e);
         if (mouse.isDown) {
             switch (c.user.settings.tool) {
                 case 0:
                     console.log(mouse.x);
-                    c.current_shape = new Rectangle(mouse.startX, mouse.startY, mouse.x - mouse.startX, mouse.y - mouse.startY, c.user.settings.stroke_color, c.user.settings.fill_color, c.user.settings.fill);
-                    c.current_shape.draw(c.ctx);
+                    c.shape_manager.current_shape = new Rectangle(mouse.startX, mouse.startY, mouse.x - mouse.startX, mouse.y - mouse.startY, c.user.settings.stroke_color, c.user.settings.fill_color, c.user.settings.fill);
+                    c.shape_manager.current_shape.draw(c.ctx);
                     break;
                 case 1:
-                    c.current_shape = new Line(mouse.startX, mouse.startY, mouse.x - mouse.startX, mouse.y - mouse.startY, c.user.settings.stroke_color);
-                    c.current_shape.draw(c.ctx);
+                    c.shape_manager.current_shape = new Line(mouse.startX, mouse.startY, mouse.x - mouse.startX, mouse.y - mouse.startY, c.user.settings.stroke_color);
+                    c.shape_manager.current_shape.draw(c.ctx);
                     break;
                 case 2:
                     c.temp_freedraw.coords.push([mouse.x, mouse.y]);
-                    c.current_shape.draw(c.ctx);
+                    c.shape_manager.current_shape.draw(c.ctx);
                     break;
                 case 3:
-                    c.current_shape = new Circle(mouse.startX, mouse.startY, mouse.x - mouse.startX, mouse.y - mouse.startY, c.user.settings.stroke_color, c.user.settings.fill_color, c.user.settings.fill);
-                    c.current_shape.draw(c.ctx);
+                    c.shape_manager.current_shape = new Circle(mouse.startX, mouse.startY, mouse.x - mouse.startX, mouse.y - mouse.startY, c.user.settings.stroke_color, c.user.settings.fill_color, c.user.settings.fill);
+                    c.shape_manager.current_shape.draw(c.ctx);
                     break;
                 case 4:
-                    c.current_shape = new Triangle(mouse.startX, mouse.startY, mouse.x - mouse.startX, mouse.y - mouse.startY, c.user.settings.stroke_color, c.user.settings.fill_color, c.user.settings.fill);
-                    c.current_shape.draw(c.ctx);
+                    c.shape_manager.current_shape = new Triangle(mouse.startX, mouse.startY, mouse.x - mouse.startX, mouse.y - mouse.startY, c.user.settings.stroke_color, c.user.settings.fill_color, c.user.settings.fill);
+                    c.shape_manager.current_shape.draw(c.ctx);
                     break;
                 case 5:
-                    c.current_shape.coords.push([mouse.x, mouse.y]);
-                    c.current_shape.draw(c.ctx);
+                    c.shape_manager.current_shape.coords.push([mouse.x, mouse.y]);
+                    c.shape_manager.current_shape.draw(c.ctx);
                     break;
                 case 6:
-                    c.current_shape.translate(mouse.startX, mouse.startY, mouse.x);
-                    c.current_shape.draw(c.ctx);
+                    // Temporarily apply translation  Perhaps add in a 'temp command execute' functino to maintain order
+                    c.shape_manager.current_shape.translate(mouse.startX, mouse.startY, mouse.x, mouse.y);
+                    c.shape_manager.current_shape.draw(c.ctx);
+                    c.shape_manager.current_shape.translate(mouse.x, mouse.y, mouse.startX, mouse.startY);
                     break;
                 default:
                     break;
             }
         }
-        else {
-            if (c.current_shape != null) {
-                c.shapes.push(c.current_shape);
-                c.render();
-                c.undone_shapes = [];
-            }
-            c.current_shape = null;
-        }
 
     }, false);
 
-    this.render = function() {
-        c.ctx.clearRect(0, 0, canvas.width, canvas.height);
-        for (let shape of c.shapes) {
-            shape.draw(this.ctx)
+    this.onMouseUp = function(){
+        mouse.isDown = false;
+        
+        if (this.user.settings.tool != 6) {
+            if (this.shape_manager.current_shape != null) {
+                this.shape_manager.execute_command(new AddShape(this.shape_manager.current_shape));
+            }
         }
+        else {
+            if (this.shape_manager.current_shape != null) {
+                this.shape_manager.execute_command(new Move(this.shape_manager.current_shape, mouse.startX, mouse.startY, mouse.x, mouse.y));
+            }
+        }
+
+        this.shape_manager.current_shape = null;
+
     }
 
-    this.undo = function() {
-        if (this.shapes.length > 0) {
-            shape = this.shapes.pop();
-            this.undone_shapes.push(shape);
-            c.render();
-        }
-
-    }
-    this.redo = function() {
-        if (this.undone_shapes.length > 0){
-            shape = this.undone_shapes.pop();
-            this.shapes.push(shape);
-            c.render();
-        }
-    }
 }
 
+
+
+//###########################################################
+//                          UI Functions
+//###########################################################
 function set_tool(sel) {
     c.user.settings.set_tool(sel.options[sel.selectedIndex].value);
 }
@@ -433,9 +498,10 @@ function set_fill(inp) {
 }
 
 function undo() {
-    c.undo();
+    c.shape_manager.undo_command();
 }
 
 function redo() {
-    c.redo();
+    c.shape_manager.redo_command();
 }
+ 
