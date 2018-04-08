@@ -1,0 +1,35 @@
+{% extends 'base.html' %}
+
+{% block container%}
+
+	<select id='soflow' onchange='set_tool(this)'>
+        <option value=0>Rectangle</option>
+        <option value=1>Line</option>
+        <option value=2>Freedraw</option>
+        <option value=3>Circle</option>
+        <option value=4>Triangle</option>
+        <option value=5>Eraser</option>
+        <option value=6>Select (incomplete)</option>
+        <option value=7>Fill Bucket (incomplete)</option>
+    </select>
+
+    <label for='stroke_color'>Stroke Color:</label>
+    <input id ='stroke_color' class='jscolor' value='000000' onchange='set_stroke_color(this)'>
+
+    <label for='fill_color'>Fill Color:</label>
+    <input id='fill_color' class='jscolor' value='ffffff' onchange='set_fill_color(this)'>
+
+    <label for='fill_enable'>Fill Enabled:</label>
+    <input id='fill_enable' type='checkbox' onchange='set_fill(this)'>
+
+    <button onclick='undo()'>Undo</button>
+    <button onclick='redo()'>Redo</button>
+
+    <canvas id='canvas' width='1600' height='900' style='height: 85%; border: 1px solid black; margin-left:6%'></canvas>
+
+    <script src="{{ url_for('static', filename='js/drawing.js') }}"></script>
+    <script src="https://cdn.socket.io/socket.io-1.4.0.js"></script>
+    <script src="{{ url_for('static', filename='js/socket.js') }}"></script>
+	<script src="{{ url_for('static', filename='js/jscolor.min.js') }}"></script>
+    
+{% endblock %}
