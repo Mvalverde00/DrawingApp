@@ -73,10 +73,42 @@ function User(username) {
 //###########################################################
 
 function Shape(x, y, width, height, stroke_color, fill_color, fill, theta=0) {
-    this.x = x;
-    this.y = y;
-    this.width = width;
-    this.height = height;
+
+	/*If the shape is drawn backwards (right to left), the width will be negative.  This causes problems in other functions
+	  So we make the width positive, and subtract from starting x coordinate to compensate.
+
+	  Also, this is incredibly messy, and you may wonder why all the if statements are necessary (this could easily be expressed much easier with just 2 if statements).
+	  Due to the implementation of Datamanger.package, this.x must be the first declaration, followed by this.y, followed by this.width, followed by this.height.  
+	  Declaring them out of order breaks everything, and I cannot find a way to fix this, despite a solid hour of testing various "clean" fixes.
+	*/
+	if (width < 0) {
+		this.x = (x + width);
+	}
+	else {
+	    this.x = x;
+	}
+
+	if (height < 0) {
+		this.y = (y + height);
+	}
+	else {
+		this.y = y;
+	}
+
+	if (width < 0) {
+		this.width = (width * -1);
+	}
+	else {
+	    this.width = width;
+	}
+
+	if (height < 0) {
+		this.height = (height * -1);
+	}
+	else {
+	    this.height = height;
+	}
+
     this.stroke_color = stroke_color;
     this.fill_color = fill_color;
     this.fill = fill;
@@ -750,6 +782,7 @@ function DataManager() {
     //Turn command into data
     DataManager.package = function(command) {
         var array = get_attributes(command);
+
         array.splice(0, 0, COMMAND_IDS.indexOf(command.constructor) );
         return array;
 
