@@ -1,0 +1,92 @@
+{% extends 'base.html' %}
+
+{% block container%}
+	
+	<style>
+	body{
+		background-image: url('https://images.wallpaperscraft.com/image/space_planet_sky_85133_1920x1080.jpg')
+
+	}
+
+	.form{
+		display: inline-flex;
+		margin: 0 auto; 
+		background-color: #c6c6c6;
+		border-radius: 5px;
+		padding: 20px;
+
+	}
+
+	</style>
+
+	<!-- Create a room menu -->
+	<div class='form'>
+		<p style='text-align:center'>CREATE A ROOM</p>
+		<br>
+		<form name="create-room" action="/create-room" method='post'>
+			<label for='room-name'>Room Name </label>
+        	<input name="room-name" type="text" id="room-name" size="63" required />
+        	<br>
+        	<label for='room-password'>Room Password </label>
+        	<input style='margin-top:5px'  name='room-password' type='password' id='room-password' size='63' placeholder='Leave blank to create a password-less room' />
+        	<input name="submit" type="submit"  id="submit" value="Send" />
+    	</form>
+	</div>
+
+	<br>
+	<br>
+
+	<!-- Join a room menu-->
+	<div class='form'>
+		JOIN A ROOM
+		<form name="join-room" action="/join-room" method='post'>
+
+			<label for='room-name'>Room Name </label>
+        	<input name="room-name" type="text" id="room-name" size="63" required />
+
+        	<br>
+
+        	<label for='room-password'>Room Password </label>
+        	<input style='margin-top:5px' name='room-password' type='password' id='room-password' size='63' placeholder='Leave blank to join a password-less room' />
+
+        	<input name="submit" type="submit"  id="submit" value="Send" />
+
+    	</form>
+	</div>
+
+	<!-- List of public rooms-->
+	<div id='rooms-list' style='padding-top:20px; margin-top:20px;'>
+		{% for room in rooms %}
+			<div class='room' style='background-color:#c6c6c6; display:inline-block; padding:5px'>
+				<h4>Room Name: {{ room.name }}</h4>
+
+				{% if room.owner == None %}
+					<p>Owner: None |	Members: {{ room.users|length }} / {{ room.MAXIMUM_OCCUPANTS }}</p>
+				{% else %}
+					<p>Owner: {{ room.owner.name }} |	Members: {{ room.users|length }} / {{ room.MAXIMUM_OCCUPANTS }}</p>
+				{% endif %}
+				
+				<!-- Hidden form to send them to room-->
+				<form name="join-room" action="/join-room" method='post'>
+
+	        	<input style='display:none' name="room-name" type="text" id="room-name" size="63" required value='{{room.name}}'/>
+	        	<input style='display:none' name='room-password' type='password' id='room-password' size='63' value='' />
+
+	        	<input name="submit" type="submit"  id="submit" value="Join Room" />
+
+	    		</form>
+
+			</div>
+
+
+
+			<br>
+			<br>
+		{% endfor %}
+
+	</div>
+
+
+
+
+{% endblock %}

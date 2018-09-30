@@ -1,0 +1,657 @@
+{% extends 'base.html' %}
+
+{% block container%}
+
+<link rel="stylesheet" href="{{ url_for('static', filename='css/switch.css') }}">
+<link rel="stylesheet" href="{{ url_for('static', filename='css/rangeslider.css') }}">
+
+<meta id='room-data' data-username='{{username}}' data-user_id='{{user_id}}' data-room_name='{{room_name}}'>
+
+<style>
+#toolbar, #menubar, #right {
+    background-color:threedface;
+    z-index:4;
+    position:absolute;
+}
+
+#toolbar {
+    position:absolute;
+    left:0;
+    width:27px;
+    top:18px;
+    height:calc(100% - 23px);
+    z-index:5;
+    padding-top:3px;
+    padding-left:3px;
+
+    border:1px solid;
+    border-top-color:threedhighlight;
+    border-left:0;
+    border-right-color:threedshadow;
+    border-bottom-color:threedshadow;
+}
+#toolbar ul {
+    margin:0;padding:0;
+    list-style:none;    
+}
+#toolbar ul li {
+    margin:0;padding:0;
+}
+
+#toolbar #buttons li {
+    float:left;
+    width:23px; height:23px;
+
+    border:1px solid blue;
+    border-top-color:threedhighlight;
+    border-left-color:threedhighlight;
+    border-right-color:threeddarkshadow;
+    border-bottom-color:threeddarkshadow;
+}
+#toolbar #buttons li img {
+    width:21px; height:21px;
+    border:1px solid red;
+    border-top-color:threedlightshadow;
+    border-left-color:threedlightshadow;
+    border-right-color:threedshadow;
+    border-bottom-color:threedshadow;   
+}
+#toolbar #buttons li.down div {
+    background-color:threedface;
+}
+#toolbar #buttons:after {
+    content: "."; 
+    display: block; 
+    height: 0; 
+    clear: both; 
+    visibility: hidden;
+}
+
+#toolbar #buttons li.down, #toolbar #buttons li.sel {
+    border-top-color:windowframe;
+    border-left-color:windowframe;
+    border-right-color:threedhighlight;
+    border-bottom-color:threedhighlight;
+}
+#toolbar #buttons li.down img, #toolbar #buttons li.sel img {
+    background-color:threedhighlight;
+    padding-left:1px; padding-top:1px;
+    width:21px;height:21px;
+    border-top-color:threedshadow;
+    border-left-color:threedshadow;
+    border-right-color:threedlightshadow;
+    border-bottom-color:threedlightshadow;  
+}
+
+#menubar {
+    position:absolute;
+    top:0px;
+    left:0px;
+    height:18px;
+    width:100%;
+    list-style:none;
+    margin:0;padding:0;
+
+    z-index:9;
+    border-bottom:1px solid threedshadow;
+}
+#menubar li {
+    float:left;
+    padding-left:4px;
+    padding-right:4px;
+    padding-bottom:2px;
+    margin-top:1px;
+    border:1px solid transparent;
+    cursor:default;
+}
+#menubar li:hover {
+    border-top-color:threedhighlight;
+    border-left-color:threedhighlight;
+    border-right-color:threedshadow;
+    border-bottom-color:threedshadow;   
+}
+
+#menubar, #menubar ul {
+    list-style:none;
+    margin:0;padding:0;
+    color:menutext;
+}
+
+#menubar li {
+    margin:0;
+    margin-top:1px;
+    font:menu; /*11px Tahoma;*/
+    float:left;
+    padding:1px;
+    padding-left:0.4em; padding-right:0.4em;
+}
+#menubar li.disabled {
+    color:inactivecaption;
+}
+#menubar > li:hover {
+    border:1px outset #CCC;
+}
+#menubar.open > li:hover {
+    border:1px inset ThreeDFace;
+    padding-top:2px;
+    padding-left:0.5em; padding-right:0.3em;
+}
+
+#menubar li div {
+    display:none;
+    position:absolute;
+    margin-left:-6px;
+    margin-top:1px;
+    border:1px outset ThreeDShadow;
+}
+#menubar.open li:hover div {
+    display:block;
+}
+
+#menubar li div ul {
+    border:1px outset ThreeDFace;
+}
+
+#menubar li ul li {
+    float:none;
+
+    margin:0;   
+    padding-top:2px; padding-left:15px; padding-right:20px;
+    height:1.7em;
+
+    background-color:threedface;
+
+    border:0;
+}
+
+#menubar li ul li.hr { 
+    height:auto;
+}
+#menubar li ul li hr {
+    margin-left:-13px;
+    margin-right:-18px;
+    border-left:0;border-right:0;
+    margin-top:0.2em;
+    margin-bottom:0;
+}
+
+#menubar li ul > li:hover {
+    background-color:highlight;
+    color:highlighttext;
+}
+#menubar li ul li.hr:hover {
+    background-color:threedface;
+    height:auto;
+}
+
+
+#menubar li ul li div  a a:hover a:active a:focus {
+    margin-left:8em;
+    margin-top:-1.4em;
+    color:menutext;
+    width:13em;
+    /* position:relative;   left:75px;  top:-10px; */
+}
+
+#menubar li ul li ul:before  {
+    content:">";
+}
+#menubar li ul li:hover ul:before   {
+    content:"";
+}
+#menubar li ul li div  {
+    display:none !important;
+}
+#menubar li ul li:hover div {
+    display:block !important;
+}
+
+#canvas {
+    /*
+    position:absolute;
+    top:19px;
+    left:31px;
+    */
+}
+
+#right{
+    position:absolute;
+    top:18px;
+    right:0px;
+    width:200px;
+    height:calc(100% - 24px);
+    z-index:5;
+
+    border:1px solid;
+    border-top-color:threedhighlight;
+    border-right:0;
+    border-left-color:threedshadow;
+    border-bottom-color:threedshadow;
+}
+
+
+#colorpicker{
+    top:19px;
+    right:0px;
+    margin:25px;
+}
+
+.color-selector {
+    display: inline-block;
+    text-align:center;
+    padding-left:20px;
+    padding-right:20px;
+
+}
+
+.color-selector input {
+    /*visibility:hidden;*/
+    position:absolute;
+}
+
+.color-selector > input + div{
+  cursor:pointer;
+  border:2px solid transparent;
+}
+
+.color-selector > input:checked + div {
+    border:5px solid #00f;
+}
+
+.color-display {
+    width:50px;
+    height:50px;
+    border:1px solid black;
+}
+
+ a, a:hover, a:focus, a:active {
+      text-decoration: none;
+      color: inherit;
+ }
+
+#chat-input, #chat-input:focus {
+    position:absolute; 
+    left:3px; 
+    border: none;
+    outline:none;
+    width:90%;
+}
+</style>
+
+<!-- CSS for making a 'chat bubble' taken from http://qnimate.com/facebook-style-chat-bubbles-using-css/ -->
+<style>
+    .chat-content-div {
+        width: 255px;
+        word-wrap: break-word;
+        margin-bottom: 12px;
+        line-height: 24px;
+        &:after {
+          content: "";
+          display: table;
+          clear: both;
+        }
+    }
+
+    .chat-content-div > p {
+        margin-bottom:0px;
+    }
+
+    .clear {clear: both}
+    .from-me {
+        position:relative;
+        padding:10px 20px;
+        color:black; 
+        background:#E5E5EA;
+        border-radius:25px;
+        float: right;
+            
+        &:before {
+            content:"";
+            position:absolute;
+            z-index:-1;
+            bottom:-2px;
+            right:-7px;
+            height:20px;
+            border-right:20px solid #E5E5EA;
+            border-bottom-left-radius: 16px 14px;
+            -webkit-transform:translate(0, -2px);
+        }
+
+        &:after {
+            content:"";
+            position:absolute;
+            z-index:1;
+            bottom:-2px;
+            right:-56px;
+            width:26px;
+            height:20px;
+            background:white;
+            border-bottom-left-radius: 10px;
+            -webkit-transform:translate(-30px, -2px);
+        }
+    }
+    .from-them {
+        position:relative;
+        padding:10px 20px;
+        background:#E5E5EA;
+        border-radius:25px;
+        color: black;
+      float: left;
+            
+        &:before {
+            content:"";
+            position:absolute;
+            z-index:2;
+            bottom:-2px;
+            left:-7px;
+            height:20px;
+            border-left:20px solid #E5E5EA;
+            border-bottom-right-radius: 16px 14px;
+            -webkit-transform:translate(0, -2px);
+        }
+
+        &:after {
+            content:"";
+            position:absolute;
+            z-index:3;
+            bottom:-2px;
+            left:4px;
+            width:26px;
+            height:20px;
+            background:white;
+            border-bottom-right-radius: 10px;
+            -webkit-transform:translate(-30px, -2px);
+        }
+    }
+
+    hr.small-margin {
+        margin-top:5px;
+        margin-bottom:5px;
+
+        border-top: 2px solid threedface;
+    }
+
+    p.no-margin {
+        margin: 0px;
+    }
+    p.broadcast {
+        font-weight: bold;
+        text-align:center;
+    }
+
+    .hidden {
+        display:none;
+    }
+
+</style>
+
+<style>
+    
+    i.left-arrow, i.right-arrow {
+        border: solid black;
+        border-width: 0 3px 3px 0;
+        display: inline-block;
+        padding: 3px;
+
+        width:20px;
+        height:20px;
+    }
+
+    .right-arrow {
+    transform: rotate(-45deg);
+    -webkit-transform: rotate(-45deg);
+    }
+
+    .left-arrow {
+    transform: rotate(135deg);
+    -webkit-transform: rotate(135deg);
+    }
+
+</style>
+
+<script src='https://cdnjs.cloudflare.com/ajax/libs/raphael/2.0.0/raphael-min.js'></script>
+
+
+<script>
+function menuOpen(e, o) {
+    o.parentNode.className = (o.parentNode.className != 'open') ? 'open' : '';
+    //e.stopPropagation();
+}
+function buttonDown(e, o) {
+    if(e.button != 2) { 
+        buttons = document.getElementById('buttons').getElementsByTagName('li');
+        for (let button of buttons){
+            button.className =''
+        }
+        o.className='down'; 
+        console.log('down');
+    }
+}
+</script>
+
+
+    <div id='menubar'>
+        <li onclick='menuOpen(event, this)'> 
+            File 
+            <div>
+                <ul>
+                <li>New</li>
+                <li id='download_viewport' onclick='c.download(this, "viewport")'><a download='whiteboard.png'>Download Current Screen as Image...</a></li>
+                <li id='download_canvas' onclick='c.download(this, "canvas")'><a download='whiteboard.png'>Download Entire Canvas as Image...</a></li>
+                <li>Save Image Online...</li>
+                <li class="hr"><hr></li>
+
+                <li class="disabled">Print Preview</li>
+                <li class="disabled">Page Setup...</li>
+                <li>Print...</li>
+                <li class="hr"><hr></li>
+
+                </ul>
+            </div>
+        </li>
+
+        <li onclick='menuOpen(event, this)'> 
+            Edit 
+            <div>
+                <ul>
+
+                <li onclick='sendUndo()'>Undo</li>
+                <li onclick='sendRedo()'>Redo</li>
+                <li class="hr"><hr></li>
+
+                </ul>
+            </div>
+        </li>
+
+        <li onclick='sendUndo()' style='margin-left:10px'>Undo</li>
+        <li onclick='c.clear()'>Clear Canvas</li>
+        <li onclick='sendRedo()' style='margin-left:10px'>Redo</li>
+
+    </div>
+
+    <div id='toolbar'>
+
+        <ul id='buttons'>
+            <li class='down' onclick='c.set_tool(IDS.RECTANGLE)' onmousedown='buttonDown(event, this)' ><img src='{{ url_for("static", filename="img/rectangle.png") }}'/> </li>
+            <li onclick='c.set_tool(IDS.LINE)' onmousedown='buttonDown(event, this)' >  <img src='{{ url_for("static", filename="img/line.png") }}'/> </li>
+            <li onclick='c.set_tool(IDS.FREEDRAW)' onmousedown='buttonDown(event, this)' >  <img src='{{ url_for("static", filename="img/pencil.png") }}'/> </li>
+            <li onclick='c.set_tool(IDS.CIRCLE)' onmousedown='buttonDown(event, this)' >  <img src='{{ url_for("static", filename="img/ellipse.png") }}'/> </li>
+            <li onclick='c.set_tool(IDS.TRIANGLE)' onmousedown='buttonDown(event, this)' >  <img src='{{ url_for("static", filename="img/triangle.png") }}'/> </li>
+            <li onclick='c.set_tool(IDS.ERASER)' onmousedown='buttonDown(event, this)' >  <img src='{{ url_for("static", filename="img/eraser.png") }}'/> </li>
+            <li onclick='c.set_tool(IDS.SELECT)' onmousedown='buttonDown(event, this)' >  <img src=''/> </li>
+            <li onclick='c.set_tool(IDS.PAN)' onmousedown='buttonDown(event, this)' >  <img src=''/> </li>
+
+            <hr>
+
+            <li onclick='c.set_tool(IDS.RESISTOR)' onmousedown='buttonDown(event, this)' >  <img src='{{ url_for("static", filename="img/resistor.png") }}'/> </li>
+
+        </ul>
+
+
+
+    </div>
+
+    <div id='canvas-area' style='position:absolute; top:19px; left:30px; height: calc(100% - 24px); width: calc(100% - 230px);'>
+        <canvas id='canvas' width='1600' height='900' style='height:100%; width: 100%; top:0px; left:0px' onload='c.shape_manager.draw_border()'></canvas>
+
+
+        <div id='chat-bubble-container' style='position:absolute; right:5px; bottom:0px;'>
+            <div id='chat-unread-message-display' style="position:absolute; right:-5px; top:-5px; border-radius:50%; background-color:red; width:15px; height:15px; font-size:13px; text-align:center">
+            0
+            </div>
+            <img id='chat-bubble' src='{{ url_for("static", filename="img/chat.svg") }}' style='pointer-events:none'/>
+        </div>
+
+
+        <div id='chat-box-container' style='position:absolute; right:5px; bottom: 0px; width:300px; height:350px; background-color:threedface;' class='hidden'>
+            <div id='chat-top' style='position:absolute; top:0px; width:100%; height:35px; border-bottom: 2px solid threeddarkshadow; border-left: 2px solid threedhighlight; border-top: 2px solid threedhighlight;'>  
+                <p style='position:absolute; font-size:18px; left:5px; top:5px; width:90%; margin:0px'> Chatting in Room {{room_name}}</p>
+                <p style='position:absolute; font-size:24px; right:5px;' id='chat-box-closer'>&#10006; </p> 
+            </div>
+                                                                        <!-- 285 =  350 - 35 - 30 -->
+            <div id='chat-content' style='position:absolute; width:100%; height:285px; top:35px; overflow-y:auto'>
+                
+                <!--
+                <div class="chat-content-div from-me">
+                  <p>Hey there! What's up?</p>
+                </div>
+
+                <div class="chat-content-div clear"></div>
+
+                <div class="chat-content-div from-them">
+                  <p>Checking out iOS7 you know..</p>
+                </div>
+                -->
+
+
+            </div>
+
+            <div id='chat-bar' style='position:absolute; bottom:0px; width:100%; height:30px; background-color:white; border: 3px solid threedface;'>
+                <input id='chat-input' type='text' placeholder='Your message here.'>
+                <img src='{{ url_for("static", filename="img/send-arrow.svg") }}' style='position:absolute; right:3px; bottom:0px; width:10%; height:100%' />
+                    
+            </div>
+        </div>
+    </div>
+
+
+    <div id='right'>
+        <div style='margin-top:15px'>
+            <div class='color-selector'>
+                <label>Stroke <br> Color
+                <input type='radio' name='select-or-fill-edit' onchange='update_stroke_selected()' checked/>
+                <div class='color-display' id='stroke-color' style='background-color:black'></div>
+                </label>
+            </div>
+            <div class='color-selector'>
+                <label>Fill <br> Color
+                <input type='radio' name='select-or-fill-edit' onchange='update_stroke_selected()'/>
+                <div class='color-display' id='fill-color' style='background-color:white'></div>
+                </label>
+            </div>
+        </div>
+
+        <div style='margin-top:15px' class="switch switch--horizontal">
+          <input id="radio-a" type="radio" name="first-switch" checked="checked" onchange='c.user.settings.set_fill(false)'/>
+          <label for="radio-a">No Fill</label>
+          <input id="radio-b" type="radio" name="first-switch" onchange='c.user.settings.set_fill(true)'/>
+          <label for="radio-b">Fill</label><span class="toggle-outside"><span class="toggle-inside"></span></span>
+        </div>
+
+        <div id="colorpicker"></div>
+
+        <div>
+            <div style='text-align:center; margin-bottom:15px'>
+                Stroke Thickness
+            </div>
+            <div>
+                <input type='range' min='1' max='100' step='1' value='1'>
+            </div>
+        </div>
+
+        <hr>
+
+        <div>
+            Enable Cartesian Plane Background:
+            <input type='checkbox' id='background-enabled' onchange ='c.toggle_background(this)'/>
+        </div>
+
+        <hr>
+
+        <div>
+            Adjusted Canvas X, Y
+            <span id='canvas-x'>0</span>, <span id ='canvas-y'>0</span>
+
+            Adjusted Mouse X, Y
+            <span id='mouse-x'>0</span>, <span id ='mouse-y'>0</span>
+        </div>
+
+        <hr>
+
+        <div style='display:flex; flex-direction:column'>
+            <p style='text-align:center; display:inline-block'>Page:</p>
+            <div style='display:flex; margin:auto'>
+                <i class='left-arrow' id='page-left'></i> 
+                <input type='number' value='1' min='1' style='width:45px; text-align:right' id='current-page-indicator'> / <span id='max-page-indicator'>1</span>
+                <i class='right-arrow' id='page-right'></i> 
+            </div>
+
+        </div>
+
+        <hr>
+
+    </div>
+
+    {% assets filters='jsmin', output='js/packed.js', "js/drawing-source/shapes.js", "js/drawing-source/user_settings.js", "js/drawing-source/data_manager.js", "js/drawing-source/commands.js", "js/drawing-source/shape_manager.js", "js/drawing-source/main.js", 'js/drawing-source/paths.js', 'js/drawing-source/interpolation_manager.js', 'js/drawing-source/utility.js',  'js/drawing-source/camera.js', 'js/drawing-source/cartesian_plane_background.js', 'js/drawing-source/layer_manager.js', 'js/drawing-source/page_manager.js',  'js/md5_hash.js', 'js/chat_manager.js', 'js/user_manager.js' %}
+        <script src=' {{ASSET_URL}} '></script>
+    {% endassets %}
+
+    <script src="https://cdn.socket.io/socket.io-1.4.0.js"></script>
+    <script src="{{ url_for('static', filename='js/socket.js') }}"></script>
+	<script src="{{ url_for('static', filename='js/colorwheel.js') }}">  </script>
+    <script src="{{ url_for('static', filename='js/rangeslider.min.js') }}">  </script>
+    <script>
+        var cw = Raphael.colorwheel('#colorpicker', 150); 
+        cw.color('#ff0');
+
+        var stroke_selected = true;
+
+        function update_stroke_selected(){
+            stroke_selected = !stroke_selected;
+        }
+
+        cw.onchange( function(color){
+            if (stroke_selected) {
+                document.getElementById('stroke-color').style.backgroundColor = color.hex;
+                c.user.settings.set_stroke_color(color.hex);
+            }
+            else {
+                document.getElementById('fill-color').style.backgroundColor = color.hex;
+                c.user.settings.set_fill_color(color.hex);
+            }
+        } );
+
+        //#############################
+        //      Slider Bar Code
+        //##############################
+        var $element = $('input[type="range"]');
+
+        $element.rangeslider({
+        polyfill: false,
+        onInit: function() {
+          var $handle = $('.rangeslider__handle', this.$range);
+          updateHandle($handle[0], this.value);
+        }
+        }).on('input', function(e) {
+            var $handle = $('.rangeslider__handle', e.target.nextSibling);
+            updateHandle($handle[0], this.value);
+        });
+
+        function updateHandle(el, val) {
+          el.textContent = val + 'px';
+          c.user.settings.set_line_width(val);
+}
+
+
+    </script>
+{% endblock %}

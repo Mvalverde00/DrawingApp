@@ -1,0 +1,17 @@
+{% extends 'base.html' %}
+
+{% block container%}
+
+
+<div id="wrapper">
+
+	<label for="login">Enter Username: </label>
+    <form name="login" action="/login" method='post'>
+        <input name="username" type="text" id="username" size="63" required />
+        <input name="submit" type="submit"  id="submit" value="Send" />
+    </form>
+</div>
+
+
+
+{% endblock %}
