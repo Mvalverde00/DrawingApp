@@ -25,6 +25,6 @@ If you don't have any tech knowledge but would like to help the project, worry n
 Currently, none exists-- this should be fixed ASAP.
 
 ## Acknowledgements
-All of the code here is my own work, unless explicitly noted otherwise in the source file.  (E.g., I remember there is a function for detecting collision with a triangle which I took from Stack Overflow, and this area of code is marked as such, with a link to the SO question).
+All of the code here is my own work, unless explicitly noted otherwise in the source file.  (I.e., marked off as such with a comment and link to say, a Stack Overflow Question)
 
 Since design is not my strongest area, many of the UI decisions were heavily inspired by https://aggie.io -- although again, the implementation is my own.
